@@ -35,6 +35,7 @@ class SignupEventView(ListCreateAPIView):
 
 class RegisterUserView(APIView):
     permission_classes = [AllowAny]
+    serializer_class = UserSerializer
 
     def get(self, request, *args, **kwargs):
         serializer = UserSerializer()
