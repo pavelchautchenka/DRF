@@ -5,7 +5,7 @@ from django.core.mail import send_mail
 
 
 @receiver(post_save, sender=Event)
-def create_event(sender, event, created, **kwargs):
+def create_event(event, created, **kwargs):
     if created:
         user_send_notification = User.objects.filter(notify=True)
         for user in user_send_notification:
