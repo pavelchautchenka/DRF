@@ -3,7 +3,7 @@ from celery import shared_task
 from django.core.mail import send_mail
 from django.utils import timezone
 from .models import Event
-
+from django.conf import settings
 
 @shared_task(ignore_result=True, routing_key='email.send')
 def send_email_task(subject, message, from_email, recipient_list):
@@ -23,12 +23,12 @@ def send_event_reminders():
         for user in event.users.all():
             send_email_task.delay("Уведомление",
                                   f"Уведомляем вас, что вы согласились посетить {event.name} \n, {event.description} \n,"
-                                  f"Мероприятие  проходит завтра  в {event.meeting_time}", "litivin1987@yandex.ru",
+                                  f"Мероприятие  проходит завтра  в {event.meeting_time}", settings.EMAIL_HOST_USER,
                                   [user.email], )
 
     for event in events_six_hours:
         for user in event.users.all():
             send_email_task.delay("Уведомление",
                                   f"Уведомляем вас, что вы согласились посетить {event.name} \n, {event.description} \n,"
-                                  f"Мероприятие  проходит сегодня  в {event.meeting_time}", "litivin1987@yandex.ru",
+                                  f"Мероприятие  проходит сегодня  в {event.meeting_time}", settings.EMAIL_HOST_USER,
                                   [user.email], )
