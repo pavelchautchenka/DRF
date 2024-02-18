@@ -1,4 +1,5 @@
 from django.apps import AppConfig
+from django.db.models.signals import post_save
 
 
 class EventConfig(AppConfig):
@@ -6,4 +7,6 @@ class EventConfig(AppConfig):
     name = 'Event'
 
     def ready(self):
-        import Event.signals
+        from .signals import create_event
+        from .models import Event
+        post_save.connect(create_event, sender=Event)

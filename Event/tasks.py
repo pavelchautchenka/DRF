@@ -6,6 +6,11 @@ from .models import Event
 
 
 @shared_task(ignore_result=True, routing_key='email.send')
+def send_email_task(subject, message, from_email, recipient_list):
+    return send_mail(subject, message, from_email, recipient_list)
+
+
+@shared_task
 def send_event_reminders():
     current_time = timezone.now()
     one_day = current_time + timedelta(days=1)
@@ -16,11 +21,14 @@ def send_event_reminders():
 
     for event in events_one_day:
         for user in event.users.all():
-            send_mail("Уведомление", f"Уведомляем вас, что вы согласились посетить {event.name} \n, {event.description} \n,"
-                      f"Мероприятие  проходит завтра  в {event.meeting_time}", "litivin1987@yandex.ru",[user.email],)
+            send_email_task.delay("Уведомление",
+                                  f"Уведомляем вас, что вы согласились посетить {event.name} \n, {event.description} \n,"
+                                  f"Мероприятие  проходит завтра  в {event.meeting_time}", "litivin1987@yandex.ru",
+                                  [user.email], )
 
     for event in events_six_hours:
         for user in event.users.all():
-            send_mail("Уведомление", f"Уведомляем вас, что вы согласились посетить {event.name} \n, {event.description} \n,"
-                      f"Мероприятие  проходит сегодня  в {event.meeting_time}","litivin1987@yandex.ru", [user.email], )
-
+            send_email_task.delay("Уведомление",
+                                  f"Уведомляем вас, что вы согласились посетить {event.name} \n, {event.description} \n,"
+                                  f"Мероприятие  проходит сегодня  в {event.meeting_time}", "litivin1987@yandex.ru",
+                                  [user.email], )

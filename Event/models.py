@@ -4,9 +4,6 @@ from django.db import models
 
 
 class User(AbstractUser):
-
-    username = models.CharField(max_length=20, unique=True, null=False)
-    password = models.CharField( null=True, blank=True)
     email = models.EmailField(unique=True, null=True, blank=True)
     notify = models.BooleanField(default=True)
 
@@ -15,7 +12,6 @@ class User(AbstractUser):
 
 
 class Event(models.Model):
-
     name = models.CharField(max_length=30, unique=False, null=False)
     meeting_time = models.DateTimeField()
     description = models.TextField()

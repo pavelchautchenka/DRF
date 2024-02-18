@@ -13,6 +13,9 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from pathlib import Path
 from datetime import timedelta
 from celery.schedules import crontab
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -22,12 +25,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-w1lrnm%#ax4#2+lve-23!yo&-q+*+j15pwukz+s!61ff_!k9v+'
+
+
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG',"0") ==1
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 INTERNAL_IPS = ["127.0.0.1"]
 
@@ -86,14 +91,16 @@ WSGI_APPLICATION = 'DRF.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': "Events",
-        "USER": "django_pavel",
-        "PASSWORD": "password",
-        "HOST": "127.0.0.1",  # IP адрес или домен СУБД.
+        'NAME': os.getenv('DATABASE_NAME'),
+        "USER": os.getenv('DATABASE_USER'),
+        "PASSWORD": os.environ.get('DATABASE_PASSWORD'),
+        "HOST": os.getenv('DATABASE_HOST'),  # IP адрес или домен СУБД.
         "PORT": '5432',
 
     }
 }
+
+RADIS_CACHE = os.environ.get("REDIS_CACHE_URL")
 
 
 # Password validation
@@ -163,9 +170,9 @@ EMAIL_HOST = 'smtp.yandex.ru'
 EMAIL_PORT = 465
 EMAIL_USE_TLS = False
 EMAIL_USE_SSL = True
-EMAIL_HOST_USER = 'litivin1987@yandex.ru'
-DEFAULT_FROM_EMAIL = 'litivin1987@yandex.ru'
-EMAIL_HOST_PASSWORD = 'zumszvgrkzfhgljb'
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
@@ -173,7 +180,7 @@ CELERY_TIMEZONE = TIME_ZONE
 
 CELERY_BEAT_SCHEDULE = {
     'send-reminders-every-hour': {
-        'task': 'Event.tasks.send_event_reminders',
+        'task': 'Event.tasks.send_email_reminders',
         'schedule': crontab(minute="0"),  # запускать каждый час в начале часа
     },
 }
