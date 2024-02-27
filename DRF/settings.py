@@ -9,13 +9,16 @@ https://docs.djangoproject.com/en/5.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
-
+import sys
 from pathlib import Path
 from datetime import timedelta
 from celery.schedules import crontab
 import os
 from dotenv import load_dotenv
 load_dotenv()
+
+
+TESTING = 'test' in sys.argv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -30,7 +33,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DJANGO_DEBUG',"0") ==1
+DEBUG = os.environ.get('DJANGO_DEBUG', "1") == True
 
 ALLOWED_HOSTS = ["*"]
 
@@ -49,6 +52,7 @@ INSTALLED_APPS = [
     'Event.apps.EventConfig',
     'debug_toolbar',
     "rest_framework",
+    'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
 ]
 
@@ -67,6 +71,8 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'DRF.urls'
+
+
 
 TEMPLATES = [
     {
@@ -96,6 +102,7 @@ DATABASES = {
         "PASSWORD": os.environ.get('DATABASE_PASSWORD'),
         "HOST": os.getenv('DATABASE_HOST'),  # IP адрес или домен СУБД.
         "PORT": '5432',
+
 
     }
 }
@@ -136,27 +143,46 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-STATIC_URL = 'static/'
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+if TESTING:
 
-REST_FRAMEWORK = {
+    REST_FRAMEWORK = {
 
-    'DEFAULT_RENDERER_CLASSES': (
-        'rest_framework.renderers.BrowsableAPIRenderer',
-        'rest_framework.renderers.JSONRenderer',
+        'DEFAULT_RENDERER_CLASSES': (
 
-    ),
+            'rest_framework.renderers.JSONRenderer',
 
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
 
-}
+        ),
+
+        'DEFAULT_AUTHENTICATION_CLASSES': (
+            'rest_framework_simplejwt.authentication.JWTAuthentication',
+        ),
+
+    }
+else:
+    REST_FRAMEWORK = {
+
+        'DEFAULT_RENDERER_CLASSES': (
+            'rest_framework.renderers.BrowsableAPIRenderer',
+            'rest_framework.renderers.JSONRenderer',
+
+        ),
+
+        'DEFAULT_AUTHENTICATION_CLASSES': (
+            'rest_framework_simplejwt.authentication.JWTAuthentication',
+        ),
+
+    }
+
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
@@ -174,16 +200,27 @@ EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
-CELERY_TIMEZONE = TIME_ZONE
 
-CELERY_BEAT_SCHEDULE = {
-    'send-reminders-every-hour': {
-        'task': 'Event.tasks.send_email_reminders',
-        'schedule': crontab(minute="0"),  # запускать каждый час в начале часа
-    },
-}
+
+if TESTING:
+    CELERY_BROKER_URL = 'memory://'
+    CELERY_TASK_ALWAYS_EAGER = True
+    CELERY_TASK_EAGER_PROPAGATES = True
+
+else:
+    CELERY_BROKER_URL = 'redis://localhost:6379/0'
+    CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+    CELERY_TIMEZONE = TIME_ZONE
+
+    CELERY_BEAT_SCHEDULE = {
+
+        'send-reminders-every-hour': {
+            'task': 'Event.tasks.send_email_reminders',
+            'schedule': crontab(minute="0"),  # запускать каждый час в начале часа
+        },
+    }
+
+
 
 
 # Uncomment when radis is running

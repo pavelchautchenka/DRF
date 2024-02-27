@@ -3,6 +3,8 @@ from rest_framework.generics import ListCreateAPIView, ListAPIView, get_object_o
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
+
 from Event.cache import get_cached
 from Event.models import Event, User
 from . import permissions
@@ -32,6 +34,12 @@ class SignupEventView(ListCreateAPIView):
         return Response({"message": "Successfully subscribed to the event"})
 
 
+def get_token(user):
+    refresh = RefreshToken.for_user(user)
+    access = AccessToken.for_user(user)
+    return {"refresh": str(refresh), "access": str(access)}
+
+
 class UserListView(ListAPIView):
     serializer_class = UserSerializer
 
@@ -48,9 +56,11 @@ class UserListView(ListAPIView):
 
     def post(self, request, *args, **kwargs):
         serializer = UserSerializer(data=request.data)
+
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
+            user = serializer.save()
+            token = get_token(user)
+            return Response({**serializer.data, **token}, status=201)
         return Response(serializer.errors)
 
 
