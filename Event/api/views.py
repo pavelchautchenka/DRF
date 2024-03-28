@@ -26,6 +26,7 @@ class SignupEventView(ListCreateAPIView):
     def get(self, request, id):
         event = get_object_or_404(Event, pk=id, meeting_time__gt=timezone.now())
         serializer = EventSerializer(event)
+
         return Response(serializer.data)
 
     def post(self, request, id, **kwargs, ):

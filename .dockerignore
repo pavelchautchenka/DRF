@@ -1,0 +1,9 @@
+.venv
+!Event
+!DRF
+!templates
+!test
+!manage.py
+!poetry.lock
+!pyproject.toml
+!run.sh

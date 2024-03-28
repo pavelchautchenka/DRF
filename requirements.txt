@@ -15,7 +15,7 @@ click-plugins==1.1.1
 click-repl==0.3.0
 crashtest==0.4.1
 distlib==0.3.8
-Django==5.0.2
+Django==5.0.3
 django-debug-toolbar==4.3.0
 django-redis==5.4.0
 djangorestframework==3.14.0
